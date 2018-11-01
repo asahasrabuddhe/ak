@@ -8,7 +8,7 @@ let adapter = new BotFrameworkAdapter({
     appPassword: process.env.MicrosoftAppPassword
 });
 
-let name: string, greeting: string;
+let name: string, greeting: string, time: string;
 let num: number;
 
 // Create HTTP server.
@@ -65,12 +65,15 @@ async function chabaao(turnContext: TurnContext) {
         if (num === 0) {
             num++;
         }
+        let d = new Date();
+        time = d.getHours() + ":" + d.getMinutes();
 
         let dialogs = [
             `Did you updated the work log?`,
             `What is the status?`,
             `${name}, please come to MR${num} for scrum`,
-            `Hi team, let's meet in MR${num} for a discussion with ajitem`
+            `Hi team, let's meet in MR${num} for a discussion with ajitem`,
+            `${name}, we can sit at ${time} for the same`
         ];
 
         let index = getRandomInt(dialogs.length);

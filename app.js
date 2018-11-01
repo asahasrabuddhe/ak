@@ -23,7 +23,7 @@ let adapter = new botbuilder_1.BotFrameworkAdapter({
     appId: process.env.MicrosoftAppId,
     appPassword: process.env.MicrosoftAppPassword
 });
-let name, greeting;
+let name, greeting, time;
 let num;
 // Create HTTP server.
 let server = restify.createServer();
@@ -72,11 +72,14 @@ function chabaao(turnContext) {
             if (num === 0) {
                 num++;
             }
+            let d = new Date();
+            time = d.getHours() + ":" + d.getMinutes();
             let dialogs = [
                 `Did you updated the work log?`,
                 `What is the status?`,
                 `${name}, please come to MR${num} for scrum`,
-                `Hi team, let's meet in MR${num} for a discussion with ajitem`
+                `Hi team, let's meet in MR${num} for a discussion with ajitem`,
+                `${name}, we can sit at ${time} for the same`
             ];
             let index = getRandomInt(dialogs.length);
             yield turnContext.sendActivity(dialogs[index]);
