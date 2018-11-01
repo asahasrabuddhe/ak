@@ -55,7 +55,7 @@ server.post('/api/messages', (req, res) => __awaiter(this, void 0, void 0, funct
                 case 'kha':
                 case 'khao':
                     loop = true;
-                    name = turnContext.activity.recipient.name;
+                    name = turnContext.activity.from.name;
                     greeting = greeter();
                     yield turnContext.sendActivity(`${greeting} ${name}!`);
                     yield chabaao(turnContext);

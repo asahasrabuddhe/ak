@@ -47,7 +47,7 @@ server.post('/api/messages', async (req, res) => {
                 case 'khao':
                     loop = true;
 
-                    name = turnContext.activity.recipient.name;
+                    name = turnContext.activity.from.name;
                     greeting = greeter();
                     await turnContext.sendActivity(`${greeting} ${name}!`);
 
