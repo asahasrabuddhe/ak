@@ -25,7 +25,7 @@ server.post('/api/messages', async (req, res) => {
             turnContext.activity.membersAdded !== undefined &&
             turnContext.activity.membersAdded[0].name === 'Bot') {
 
-            name = turnContext.activity.recipient.name;
+            name = turnContext.activity.from.name;
             greeting = greeter();
             await turnContext.sendActivity(`${greeting} ${name}!`);
 

@@ -37,7 +37,7 @@ server.post('/api/messages', (req, res) => __awaiter(this, void 0, void 0, funct
         if (turnContext.activity.type === botbuilder_1.ActivityTypes.ConversationUpdate &&
             turnContext.activity.membersAdded !== undefined &&
             turnContext.activity.membersAdded[0].name === 'Bot') {
-            name = turnContext.activity.recipient.name;
+            name = turnContext.activity.from.name;
             greeting = greeter();
             yield turnContext.sendActivity(`${greeting} ${name}!`);
             yield chabaao(turnContext);
