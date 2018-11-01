@@ -80,8 +80,7 @@ function chabaao(turnContext) {
             ];
             let index = getRandomInt(dialogs.length);
             yield turnContext.sendActivity(dialogs[index]);
-            // let n = getRandomInt(1000000);
-            let n = getRandomInt(10000);
+            let n = getRandomInt(1000000);
             console.log(`Sleep for ${n}`);
             yield sleep(getRandomInt(n));
             dialogs = [];
