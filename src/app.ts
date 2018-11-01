@@ -8,10 +8,8 @@ let adapter = new BotFrameworkAdapter({
     appPassword: process.env.MicrosoftAppPassword
 });
 
-let dialogs = [
-  'Did you updated the work log?',
-  'What is the status?',
-];
+let name: string, greeting: string;
+let num: number;
 
 // Create HTTP server.
 let server = restify.createServer();
@@ -26,7 +24,11 @@ server.post('/api/messages', async (req, res) => {
         if (turnContext.activity.type === ActivityTypes.ConversationUpdate &&
             turnContext.activity.membersAdded !== undefined &&
             turnContext.activity.membersAdded[0].name === 'Bot') {
-            await turnContext.sendActivity(`Did you updated the work log?`);
+
+            name = turnContext.activity.recipient.name;
+            greeting = greeter();
+            await turnContext.sendActivity(`${greeting} ${name}!`);
+
             await chabaao(turnContext)
         }
 
@@ -43,6 +45,11 @@ server.post('/api/messages', async (req, res) => {
                 case 'kha':
                 case 'khao':
                     loop = true;
+
+                    name = turnContext.activity.recipient.name;
+                    greeting = greeter();
+                    await turnContext.sendActivity(`${greeting} ${name}!`);
+
                     await chabaao(turnContext);
                     break;
                 default:
@@ -54,10 +61,29 @@ server.post('/api/messages', async (req, res) => {
 
 async function chabaao(turnContext: TurnContext) {
     while (loop) {
-        await turnContext.sendActivity(`Did you updated the work log?`);
-        let n = getRandomInt(1000000);
+        num = getRandomInt(4);
+        if (num === 0) {
+            num++;
+        }
+
+        let dialogs = [
+            `Did you updated the work log?`,
+            `What is the status?`,
+            `${name}, please come to MR${num} for scrum`,
+            `Hi team, let's meet in MR${num} for a discussion with ajitem`
+        ];
+
+        let index = getRandomInt(dialogs.length);
+
+        await turnContext.sendActivity(dialogs[index]);
+
+        // let n = getRandomInt(1000000);
+        let n = getRandomInt(10000);
+
         console.log(`Sleep for ${n}`);
         await sleep(getRandomInt(n));
+
+        dialogs = [];
     }
 }
 
@@ -67,4 +93,16 @@ function sleep(ms: number) {
 
 function getRandomInt(max: number) {
     return Math.floor(Math.random() * Math.floor(max));
+}
+
+function greeter() {
+    let d = new Date();
+    let time = d.getHours();
+
+    if (time < 12)
+        return 'Good Morning';
+    else if (time < 17)
+        return 'Good Afternoon';
+    else
+        return 'Good Evening';
 }

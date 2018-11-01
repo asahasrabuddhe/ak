@@ -23,6 +23,8 @@ let adapter = new botbuilder_1.BotFrameworkAdapter({
     appId: process.env.MicrosoftAppId,
     appPassword: process.env.MicrosoftAppPassword
 });
+let name, greeting;
+let num;
 // Create HTTP server.
 let server = restify.createServer();
 server.listen(process.env.port || process.env.PORT || 3978, function () {
@@ -35,7 +37,9 @@ server.post('/api/messages', (req, res) => __awaiter(this, void 0, void 0, funct
         if (turnContext.activity.type === botbuilder_1.ActivityTypes.ConversationUpdate &&
             turnContext.activity.membersAdded !== undefined &&
             turnContext.activity.membersAdded[0].name === 'Bot') {
-            yield turnContext.sendActivity(`Did you updated the work log?`);
+            name = turnContext.activity.recipient.name;
+            greeting = greeter();
+            yield turnContext.sendActivity(`${greeting} ${name}!`);
             yield chabaao(turnContext);
         }
         // Do something with this incoming activity!
@@ -44,10 +48,15 @@ server.post('/api/messages', (req, res) => __awaiter(this, void 0, void 0, funct
             const utterance = turnContext.activity.text;
             switch (utterance) {
                 case 'thamb':
+                case 'tham':
                     loop = false;
                     break;
                 case 'kha':
+                case 'khao':
                     loop = true;
+                    name = turnContext.activity.recipient.name;
+                    greeting = greeter();
+                    yield turnContext.sendActivity(`${greeting} ${name}!`);
                     yield chabaao(turnContext);
                     break;
                 default:
@@ -59,10 +68,23 @@ server.post('/api/messages', (req, res) => __awaiter(this, void 0, void 0, funct
 function chabaao(turnContext) {
     return __awaiter(this, void 0, void 0, function* () {
         while (loop) {
-            yield turnContext.sendActivity(`Did you updated the work log?`);
-            let n = getRandomInt(100000);
+            num = getRandomInt(4);
+            if (num === 0) {
+                num++;
+            }
+            let dialogs = [
+                `Did you updated the work log?`,
+                `What is the status?`,
+                `${name}, please come to MR${num} for scrum`,
+                `Hi team, let's meet in MR${num} for a discussion with ajitem`
+            ];
+            let index = getRandomInt(dialogs.length);
+            yield turnContext.sendActivity(dialogs[index]);
+            // let n = getRandomInt(1000000);
+            let n = getRandomInt(10000);
             console.log(`Sleep for ${n}`);
             yield sleep(getRandomInt(n));
+            dialogs = [];
         }
     });
 }
@@ -71,4 +93,14 @@ function sleep(ms) {
 }
 function getRandomInt(max) {
     return Math.floor(Math.random() * Math.floor(max));
+}
+function greeter() {
+    let d = new Date();
+    let time = d.getHours();
+    if (time < 12)
+        return 'Good Morning';
+    else if (time < 17)
+        return 'Good Afternoon';
+    else
+        return 'Good Evening';
 }
