@@ -8,6 +8,11 @@ let adapter = new BotFrameworkAdapter({
     appPassword: process.env.MicrosoftAppPassword
 });
 
+let dialogs = [
+  'Did you updated the work log?',
+  'What is the status?',
+];
+
 // Create HTTP server.
 let server = restify.createServer();
 server.listen(process.env.port || process.env.PORT || 3978, function () {
@@ -48,7 +53,7 @@ server.post('/api/messages', async (req, res) => {
 async function chabaao(turnContext: TurnContext) {
     while (loop) {
         await turnContext.sendActivity(`Did you updated the work log?`);
-        let n = getRandomInt(100000);
+        let n = getRandomInt(1000000);
         console.log(`Sleep for ${n}`);
         await sleep(getRandomInt(n));
     }
