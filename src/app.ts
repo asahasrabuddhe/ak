@@ -37,9 +37,11 @@ server.post('/api/messages', async (req, res) => {
 
             switch (utterance) {
                 case 'thamb':
+                case 'tham':
                     loop = false;
                     break;
                 case 'kha':
+                case 'khao':
                     loop = true;
                     await chabaao(turnContext);
                     break;
