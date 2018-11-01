@@ -16,6 +16,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const restify = __importStar(require("restify"));
+const moment = __importStar(require("moment-timezone"));
 const botbuilder_1 = require("botbuilder");
 let loop = true;
 // Create bot adapter, which defines how the bot sends and receives messages.
@@ -72,8 +73,8 @@ function chabaao(turnContext) {
             if (num === 0) {
                 num++;
             }
-            let d = new Date();
-            time = d.getHours() + ":" + d.getMinutes();
+            let d = moment.tz('Asia/Kolkata');
+            time = d.format('hh:kk');
             let dialogs = [
                 `Did you updated the work log?`,
                 `What is the status?`,
@@ -97,11 +98,11 @@ function getRandomInt(max) {
     return Math.floor(Math.random() * Math.floor(max));
 }
 function greeter() {
-    let d = new Date();
-    let time = d.getHours();
-    if (time < 12)
+    let d = moment.tz('Asia/Kolkata');
+    let t = parseInt(d.format('HH'), 10);
+    if (t < 12)
         return 'Good Morning';
-    else if (time < 17)
+    else if (t < 17)
         return 'Good Afternoon';
     else
         return 'Good Evening';

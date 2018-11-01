@@ -1,4 +1,5 @@
 import * as restify from 'restify';
+import * as moment from 'moment-timezone';
 import {ActivityTypes, BotFrameworkAdapter, TurnContext} from 'botbuilder';
 
 let loop = true;
@@ -65,8 +66,8 @@ async function chabaao(turnContext: TurnContext) {
         if (num === 0) {
             num++;
         }
-        let d = new Date();
-        time = d.getHours() + ":" + d.getMinutes();
+        let d = moment.tz('Asia/Kolkata');
+        time =d.format('hh:kk');
 
         let dialogs = [
             `Did you updated the work log?`,
@@ -98,12 +99,12 @@ function getRandomInt(max: number) {
 }
 
 function greeter() {
-    let d = new Date();
-    let time = d.getHours();
+    let d = moment.tz( 'Asia/Kolkata');
+    let t = parseInt(d.format('HH'), 10);
 
-    if (time < 12)
+    if (t < 12)
         return 'Good Morning';
-    else if (time < 17)
+    else if (t < 17)
         return 'Good Afternoon';
     else
         return 'Good Evening';
