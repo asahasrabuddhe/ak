@@ -1,16 +1,34 @@
 import * as restify from 'restify';
-import * as moment from 'moment-timezone';
-import {ActivityTypes, BotFrameworkAdapter, TurnContext} from 'botbuilder';
+import {BotFrameworkAdapter, TurnContext, ConversationState, MemoryStorage} from 'botbuilder';
+import {Akbot} from "./akbot";
 
-let loop = true;
 // Create bot adapter, which defines how the bot sends and receives messages.
 let adapter = new BotFrameworkAdapter({
     appId: process.env.MicrosoftAppId,
     appPassword: process.env.MicrosoftAppPassword
 });
 
-let name: string, greeting: string, time: string;
-let num: number;
+// Define a state store for your bot.
+// A bot requires a state store to persist the dialog and user state between messages.
+let conversationState: ConversationState;
+// Catch-all for any unhandled errors in your bot.
+adapter.onTurnError = async (turnContext, error) => {
+    // This check writes out errors to console log .vs. app insights.
+    console.error(`\n [onTurnError]: ${ error }`);
+    // Send a message to the user.
+    await turnContext.sendActivity(`Oops. Something went wrong!`);
+    // Clear out state and save changes so the user is not stuck in a bad state.
+    await conversationState.clear(turnContext);
+    await conversationState.saveChanges(turnContext);
+};
+
+// For local development, in-memory storage is used.
+// CAUTION: The Memory Storage used here is for local bot debugging only. When the bot
+// is restarted, anything stored in memory will be gone.
+const memoryStorage = new MemoryStorage();
+conversationState = new ConversationState(memoryStorage);
+
+const bot = new Akbot(conversationState);
 
 // Create HTTP server.
 let server = restify.createServer();
@@ -22,90 +40,6 @@ server.listen(process.env.port || process.env.PORT || 3978, function () {
 server.post('/api/messages', async (req, res) => {
     // Use the adapter to process the incoming web request into a TurnContext object.
     await adapter.processActivity(req, res, async (turnContext: TurnContext) => {
-        if (turnContext.activity.type === ActivityTypes.ConversationUpdate &&
-            turnContext.activity.membersAdded !== undefined &&
-            turnContext.activity.membersAdded[0].name === 'Bot') {
-
-            name = turnContext.activity.from.name;
-            greeting = greeter();
-            await turnContext.sendActivity(`${greeting} ${name}!`);
-
-            await chabaao(turnContext)
-        }
-
-        // Do something with this incoming activity!
-        if (turnContext.activity.type === ActivityTypes.Message) {
-            // Get the user's text
-            const utterance = turnContext.activity.text;
-
-            switch (utterance) {
-                case 'thamb':
-                case 'tham':
-                    loop = false;
-                    break;
-                case 'kha':
-                case 'khao':
-                    loop = true;
-
-                    name = turnContext.activity.from.name;
-                    greeting = greeter();
-                    await turnContext.sendActivity(`${greeting} ${name}!`);
-
-                    await chabaao(turnContext);
-                    break;
-                default:
-                    await turnContext.sendActivity(`You said ${utterance}`)
-            }
-        }
+        await bot.onTurn(turnContext);
     });
 });
-
-async function chabaao(turnContext: TurnContext) {
-    while (loop) {
-        num = getRandomInt(4);
-        if (num === 0) {
-            num++;
-        }
-        let d = moment.tz('Asia/Kolkata');
-        time =d.format('hh:kk');
-
-        let dialogs = [
-            `Did you updated the work log?`,
-            `What is the status?`,
-            `${name}, please come to MR${num} for scrum`,
-            `Hi team, let's meet in MR${num} for a discussion with ajitem`,
-            `${name}, we can sit at ${time} for the same`
-        ];
-
-        let index = getRandomInt(dialogs.length);
-
-        await turnContext.sendActivity(dialogs[index]);
-
-        let n = getRandomInt(1000000);
-
-        console.log(`Sleep for ${n}`);
-        await sleep(getRandomInt(n));
-
-        dialogs = [];
-    }
-}
-
-function sleep(ms: number) {
-    return new Promise(resolve => setTimeout(resolve, ms));
-}
-
-function getRandomInt(max: number) {
-    return Math.floor(Math.random() * Math.floor(max));
-}
-
-function greeter() {
-    let d = moment.tz( 'Asia/Kolkata');
-    let t = parseInt(d.format('HH'), 10);
-
-    if (t < 12)
-        return 'Good Morning';
-    else if (t < 17)
-        return 'Good Afternoon';
-    else
-        return 'Good Evening';
-}

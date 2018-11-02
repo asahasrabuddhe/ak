@@ -16,16 +16,32 @@ var __importStar = (this && this.__importStar) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const restify = __importStar(require("restify"));
-const moment = __importStar(require("moment-timezone"));
 const botbuilder_1 = require("botbuilder");
-let loop = true;
+const akbot_1 = require("./akbot");
 // Create bot adapter, which defines how the bot sends and receives messages.
 let adapter = new botbuilder_1.BotFrameworkAdapter({
     appId: process.env.MicrosoftAppId,
     appPassword: process.env.MicrosoftAppPassword
 });
-let name, greeting, time;
-let num;
+// Define a state store for your bot.
+// A bot requires a state store to persist the dialog and user state between messages.
+let conversationState;
+// Catch-all for any unhandled errors in your bot.
+adapter.onTurnError = (turnContext, error) => __awaiter(this, void 0, void 0, function* () {
+    // This check writes out errors to console log .vs. app insights.
+    console.error(`\n [onTurnError]: ${error}`);
+    // Send a message to the user.
+    yield turnContext.sendActivity(`Oops. Something went wrong!`);
+    // Clear out state and save changes so the user is not stuck in a bad state.
+    yield conversationState.clear(turnContext);
+    yield conversationState.saveChanges(turnContext);
+});
+// For local development, in-memory storage is used.
+// CAUTION: The Memory Storage used here is for local bot debugging only. When the bot
+// is restarted, anything stored in memory will be gone.
+const memoryStorage = new botbuilder_1.MemoryStorage();
+conversationState = new botbuilder_1.ConversationState(memoryStorage);
+const bot = new akbot_1.Akbot(conversationState);
 // Create HTTP server.
 let server = restify.createServer();
 server.listen(process.env.port || process.env.PORT || 3978, function () {
@@ -35,75 +51,6 @@ server.listen(process.env.port || process.env.PORT || 3978, function () {
 server.post('/api/messages', (req, res) => __awaiter(this, void 0, void 0, function* () {
     // Use the adapter to process the incoming web request into a TurnContext object.
     yield adapter.processActivity(req, res, (turnContext) => __awaiter(this, void 0, void 0, function* () {
-        if (turnContext.activity.type === botbuilder_1.ActivityTypes.ConversationUpdate &&
-            turnContext.activity.membersAdded !== undefined &&
-            turnContext.activity.membersAdded[0].name === 'Bot') {
-            name = turnContext.activity.from.name;
-            greeting = greeter();
-            yield turnContext.sendActivity(`${greeting} ${name}!`);
-            yield chabaao(turnContext);
-        }
-        // Do something with this incoming activity!
-        if (turnContext.activity.type === botbuilder_1.ActivityTypes.Message) {
-            // Get the user's text
-            const utterance = turnContext.activity.text;
-            switch (utterance) {
-                case 'thamb':
-                case 'tham':
-                    loop = false;
-                    break;
-                case 'kha':
-                case 'khao':
-                    loop = true;
-                    name = turnContext.activity.from.name;
-                    greeting = greeter();
-                    yield turnContext.sendActivity(`${greeting} ${name}!`);
-                    yield chabaao(turnContext);
-                    break;
-                default:
-                    yield turnContext.sendActivity(`You said ${utterance}`);
-            }
-        }
+        yield bot.onTurn(turnContext);
     }));
 }));
-function chabaao(turnContext) {
-    return __awaiter(this, void 0, void 0, function* () {
-        while (loop) {
-            num = getRandomInt(4);
-            if (num === 0) {
-                num++;
-            }
-            let d = moment.tz('Asia/Kolkata');
-            time = d.format('hh:kk');
-            let dialogs = [
-                `Did you updated the work log?`,
-                `What is the status?`,
-                `${name}, please come to MR${num} for scrum`,
-                `Hi team, let's meet in MR${num} for a discussion with ajitem`,
-                `${name}, we can sit at ${time} for the same`
-            ];
-            let index = getRandomInt(dialogs.length);
-            yield turnContext.sendActivity(dialogs[index]);
-            let n = getRandomInt(1000000);
-            console.log(`Sleep for ${n}`);
-            yield sleep(getRandomInt(n));
-            dialogs = [];
-        }
-    });
-}
-function sleep(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
-}
-function getRandomInt(max) {
-    return Math.floor(Math.random() * Math.floor(max));
-}
-function greeter() {
-    let d = moment.tz('Asia/Kolkata');
-    let t = parseInt(d.format('HH'), 10);
-    if (t < 12)
-        return 'Good Morning';
-    else if (t < 17)
-        return 'Good Afternoon';
-    else
-        return 'Good Evening';
-}
